@@ -50,11 +50,13 @@
             lld
             pkg-config
             openssl
+            sqlite
             webkitgtk_4_1
             gtk3
             xdotool
             dioxus-cli
             diesel-cli
+            diesel-cli-ext
             wasm-bindgen-cli-0-2-125
           ];
         };

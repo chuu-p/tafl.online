@@ -8,6 +8,23 @@ edition = "2021"
 
 [dependencies]
 dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
+tafl-domain = { path = "../tafl-domain" }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+axum = "0.8.4"
+tower-cookies = "0.11"
+rand = "0.8"
+reqwest = { version = "0.12", features = ["json"] }
+hex = "0.4"
+base64 = "0.22"
+sha2 = "0.10"
+urlencoding = "2"
+url = "2"
+diesel = { version = "2.3.10", features = ["sqlite", "chrono"] }
+
+[dev-dependencies]
+wiremock = "0.6"
 
 [features]
 default = ["web"]
