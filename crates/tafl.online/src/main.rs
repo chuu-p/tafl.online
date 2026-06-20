@@ -64,6 +64,9 @@ struct MeResponse {
 fn Navbar() -> Element {
     let mut logged_in = use_signal(|| false);
     let mut user_name = use_signal(|| String::new());
+    let mut show_play = use_signal(|| false);
+    let mut minutes = use_signal(|| 5);
+    let mut increment = use_signal(|| 3);
 
     use_effect(move || {
         spawn(async move {
@@ -96,7 +99,12 @@ fn Navbar() -> Element {
         nav { class: "navbar",
             div { class: "navbar-left",
                 Link { to: Route::Home {}, class: "brand", "tafl.online" }
-                a { href: "#", class: "nav-link play-link", "Play" }
+                a {
+                    href: "#",
+                    class: "nav-link play-link",
+                    onclick: move |e| { e.prevent_default(); show_play.set(true); },
+                    "Play"
+                }
             }
             div { class: "navbar-right",
                 if *logged_in.read() {
@@ -104,6 +112,48 @@ fn Navbar() -> Element {
                     a { href: "/api/auth/logout", class: "nav-link", "Sign out" }
                 } else {
                     a { href: "/api/auth/login", class: "nav-link", "Sign in" }
+                }
+            }
+        }
+        if *show_play.read() {
+            div { class: "modal-overlay",
+                onclick: move |_| show_play.set(false),
+                div { class: "modal", onclick: move |e| e.stop_propagation(),
+                    h3 { "Create Game" }
+
+                    label { class: "field-label", "Variant" }
+                    select { class: "field-select", id: "variant",
+                        option { value: "tablut", "Tablut" }
+                        option { value: "hnefatafl", "Hnefatafl" }
+                    }
+
+                    label { class: "field-label", "Minutes per side" }
+                    div { class: "slider-row",
+                        input {
+                            class: "field-slider",
+                            r#type: "range",
+                            min: "1",
+                            max: "120",
+                            value: "{minutes}",
+                            oninput: move |e| { *minutes.write() = e.value().parse().unwrap_or(5); },
+                        }
+                        span { class: "val-box", "{minutes}" }
+                    }
+
+                    label { class: "field-label", "Increment in seconds" }
+                    div { class: "slider-row",
+                        input {
+                            class: "field-slider",
+                            r#type: "range",
+                            min: "0",
+                            max: "120",
+                            value: "{increment}",
+                            oninput: move |e| { *increment.write() = e.value().parse().unwrap_or(3); },
+                        }
+                        span { class: "val-box", "{increment}" }
+                    }
+
+                    button { onclick: move |_| show_play.set(false), "Create lobby game" }
                 }
             }
         }
