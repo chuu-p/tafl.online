@@ -9,6 +9,11 @@ dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["Window", "Response", "RequestInit"] }
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tafl-domain = { path = "../tafl-domain" }
 dotenvy = "0.15"

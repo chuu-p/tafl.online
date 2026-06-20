@@ -5419,6 +5419,9 @@ dependencies = [
  "tower-cookies",
  "url",
  "urlencoding",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
  "wiremock",
 ]
 
