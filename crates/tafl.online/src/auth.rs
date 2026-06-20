@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Query, State as AxumState},
+    extract::{Extension, Query},
     http::StatusCode,
     response::{IntoResponse, Redirect, Response},
     routing::get,
@@ -112,7 +112,7 @@ pub struct CallbackParams {
     pub error: Option<String>,
 }
 
-pub async fn login_handler(AxumState(state): AxumState<AuthState>) -> Response {
+pub async fn login_handler(Extension(state): Extension<AuthState>) -> Response {
     let (code_verifier, code_challenge) = generate_pkce();
     let state_param = generate_state();
 
@@ -135,7 +135,7 @@ pub async fn login_handler(AxumState(state): AxumState<AuthState>) -> Response {
 }
 
 pub async fn callback_handler(
-    AxumState(state): AxumState<AuthState>,
+    Extension(state): Extension<AuthState>,
     cookies: Cookies,
     Query(params): Query<CallbackParams>,
 ) -> Result<Redirect, (StatusCode, String)> {
@@ -145,45 +145,61 @@ pub async fn callback_handler(
 
     let code_verifier = {
         let mut store = state.session_store.write().await;
-        store
-            .pending_states
-            .remove(&params.state)
-            .ok_or_else(|| (StatusCode::BAD_REQUEST, "Invalid or expired state".to_string()))?
+        store.pending_states.remove(&params.state).ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                "Invalid or expired state".to_string(),
+            )
+        })?
     };
 
     let client_secret = std::env::var("GOOGLE_CLIENT_SECRET").unwrap_or_default();
 
     let http = reqwest::Client::new();
 
-    // Exchange authorization code for tokens
-    let token_response: TokenResponse = http
-        .post(&state.token_url)
-        .form(&[
-            ("grant_type", "authorization_code"),
-            ("client_id", GOOGLE_CLIENT_ID),
-            ("client_secret", &client_secret),
-            ("code", &params.code),
-            ("redirect_uri", &state.redirect_uri),
-            ("code_verifier", &code_verifier),
-        ])
-        .send()
-        .await
-        .map_err(|e| {
+    let token_response: TokenResponse = {
+        let resp = http
+            .post(&state.token_url)
+            .form(&[
+                ("grant_type", "authorization_code"),
+                ("client_id", GOOGLE_CLIENT_ID),
+                ("client_secret", &client_secret),
+                ("code", &params.code),
+                ("redirect_uri", &state.redirect_uri),
+                ("code_verifier", &code_verifier),
+            ])
+            .send()
+            .await
+            .map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Token request failed: {e}"),
+                )
+            })?;
+
+        let status = resp.status();
+        let body = resp.text().await.map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Token request failed: {e}"),
-            )
-        })?
-        .json()
-        .await
-        .map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Token parse failed: {e}"),
+                format!("Failed to read token response body: {e}"),
             )
         })?;
 
-    // Fetch user info
+        if !status.is_success() {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Token exchange failed ({}): {}", status, body),
+            ));
+        }
+
+        serde_json::from_str(&body).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Token parse failed: {e}. Body: {body}"),
+            )
+        })?
+    };
+
     let user_info: GoogleUserInfo = http
         .get(&state.userinfo_url)
         .bearer_auth(&token_response.access_token)
@@ -224,7 +240,7 @@ pub async fn callback_handler(
 }
 
 pub async fn me_handler(
-    AxumState(state): AxumState<AuthState>,
+    Extension(state): Extension<AuthState>,
     cookies: Cookies,
 ) -> Result<axum::Json<serde_json::Value>, StatusCode> {
     let session_token = cookies
@@ -250,10 +266,7 @@ pub async fn me_handler(
     Ok(axum::Json(serde_json::to_value(user).unwrap()))
 }
 
-pub async fn logout_handler(
-    AxumState(state): AxumState<AuthState>,
-    cookies: Cookies,
-) -> Response {
+pub async fn logout_handler(Extension(state): Extension<AuthState>, cookies: Cookies) -> Response {
     if let Some(session_cookie) = cookies.get("session_token") {
         let token = session_cookie.value().to_string();
         let mut store = state.session_store.write().await;
@@ -325,15 +338,12 @@ fn upsert_user(db_url: &str, info: &GoogleUserInfo) -> Result<User, (StatusCode,
                 )
             })?;
 
-        users::table
-            .find(user.id)
-            .first(&mut conn)
-            .map_err(|e| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("DB re-read failed: {e}"),
-                )
-            })
+        users::table.find(user.id).first(&mut conn).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("DB re-read failed: {e}"),
+            )
+        })
     } else {
         let new_user = NewUser {
             google_id: &info.id,
@@ -365,7 +375,7 @@ fn upsert_user(db_url: &str, info: &GoogleUserInfo) -> Result<User, (StatusCode,
 }
 
 // ---------------------------------------------------------------------------
-// Router
+// Router — returns Router<()> ready to merge, with CookieManagerLayer
 // ---------------------------------------------------------------------------
 
 pub fn auth_router(state: AuthState) -> Router {
@@ -374,6 +384,6 @@ pub fn auth_router(state: AuthState) -> Router {
         .route("/api/auth/callback", get(callback_handler))
         .route("/api/auth/me", get(me_handler))
         .route("/api/auth/logout", get(logout_handler))
-        .with_state(state)
         .layer(CookieManagerLayer::new())
+        .layer(Extension(state))
 }

@@ -4,14 +4,15 @@ version = "0.1.0"
 authors = ["chuu-p <chuu801@pm.me>"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
-tafl-domain = { path = "../tafl-domain" }
-tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tafl-domain = { path = "../tafl-domain" }
+dotenvy = "0.15"
+tokio = { version = "1", features = ["full"] }
 axum = "0.8.4"
 tower-cookies = "0.11"
 rand = "0.8"
@@ -25,6 +26,8 @@ diesel = { version = "2.3.10", features = ["sqlite", "chrono"] }
 
 [dev-dependencies]
 wiremock = "0.6"
+reqwest = { version = "0.12", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
 
 [features]
 default = ["web"]

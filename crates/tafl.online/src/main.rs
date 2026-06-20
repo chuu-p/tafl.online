@@ -1,3 +1,4 @@
+#[cfg(feature = "server")]
 mod auth;
 
 use dioxus::prelude::*;
@@ -18,14 +19,47 @@ const HEADER_SVG: Asset = asset!("/assets/header.svg");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 fn main() {
-    dioxus::launch(App);
+    #[cfg(feature = "server")]
+    {
+        let _ = dotenvy::dotenv();
+
+        dioxus_server::serve(|| async move {
+            use dioxus_server::{DioxusRouterExt, FullstackState, ServeConfig};
+
+            let redirect_uri = std::env::var("OAUTH_REDIRECT_URI")
+                .unwrap_or_else(|_| "http://localhost:8080/api/auth/callback".to_string());
+
+            let auth_state = auth::AuthState::new(redirect_uri);
+            let config = ServeConfig::default();
+
+            let app = axum::Router::new()
+                .route("/api/auth/login", axum::routing::get(auth::login_handler))
+                .route(
+                    "/api/auth/callback",
+                    axum::routing::get(auth::callback_handler),
+                )
+                .route("/api/auth/me", axum::routing::get(auth::me_handler))
+                .route("/api/auth/logout", axum::routing::get(auth::logout_handler))
+                .layer(tower_cookies::CookieManagerLayer::new())
+                .layer(axum::extract::Extension(auth_state))
+                .serve_dioxus_application(config, App);
+
+            Ok(app)
+        });
+    }
+
+    #[cfg(not(feature = "server"))]
+    {
+        dioxus::launch(App);
+    }
 }
 
 #[component]
 fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: MAIN_CSS } document::Link { rel: "stylesheet", href: TAILWIND_CSS }
+        document::Link { rel: "stylesheet", href: MAIN_CSS }
+        document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         Router::<Route> {}
     }
 }
@@ -37,12 +71,9 @@ pub fn Hero() -> Element {
             id: "hero",
             img { src: HEADER_SVG, id: "header" }
             div { id: "links",
-                a { href: "https://dioxuslabs.com/learn/0.7/", "📚 Learn Dioxus" }
-                a { href: "https://dioxuslabs.com/awesome", "🚀 Awesome Dioxus" }
-                a { href: "https://github.com/dioxus-community/", "📡 Community Libraries" }
-                a { href: "https://github.com/DioxusLabs/sdk", "⚙️ Dioxus Development Kit" }
-                a { href: "https://marketplace.visualstudio.com/items?itemName=DioxusLabs.dioxus", "💫 VSCode Extension" }
-                a { href: "https://discord.gg/XgGxMSkvUM", "👋 Community Discord" }
+                a { href: "https://dioxuslabs.com/learn/0.7/", "Learn Dioxus" }
+                a { href: "https://dioxuslabs.com/awesome", "Awesome Dioxus" }
+                a { href: "https://github.com/dioxus-community/", "Community Libraries" }
             }
         }
     }
@@ -63,12 +94,8 @@ pub fn Blog(id: i32) -> Element {
     rsx! {
         div {
             id: "blog",
-
-            // Content
             h1 { "This is blog #{id}!" }
             p { "In blog #{id}, we show how the Dioxus router works and how URL parameters can be passed as props to our route components." }
-
-            // Navigation links
             Link {
                 to: Route::Blog { id: id - 1 },
                 "Previous"
@@ -96,6 +123,7 @@ fn Navbar() -> Element {
                 to: Route::Blog { id: 1 },
                 "Blog"
             }
+            a { href: "/api/auth/login", "Login" }
         }
 
         Outlet::<Route> {}

@@ -5407,6 +5407,7 @@ dependencies = [
  "base64",
  "diesel",
  "dioxus",
+ "dotenvy",
  "hex",
  "rand 0.8.6",
  "reqwest",
