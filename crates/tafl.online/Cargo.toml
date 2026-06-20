@@ -12,13 +12,16 @@ serde_json = "1"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3", features = ["Window", "Response", "RequestInit"] }
+web-sys = { version = "0.3.77", features = ["Window", "Response", "RequestInit", "WebSocket", "BinaryType", "MessageEvent", "Location"] }
+js-sys = "0.3"
+futures-channel = "0.3"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tafl-domain = { path = "../tafl-domain" }
 dotenvy = "0.15"
 tokio = { version = "1", features = ["full"] }
-axum = "0.8.4"
+axum = { version = "0.8.4", features = ["ws"] }
+futures = "0.3"
 tower-cookies = "0.11"
 rand = "0.8"
 reqwest = { version = "0.12", features = ["json"] }
@@ -31,6 +34,7 @@ diesel = { version = "2.3.10", features = ["sqlite", "chrono"] }
 
 [dev-dependencies]
 wiremock = "0.6"
+wasm-bindgen-test = "0.3"
 reqwest = { version = "0.12", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 

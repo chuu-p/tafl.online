@@ -1,3 +1,4 @@
+pub mod board;
 pub mod models;
 pub mod schema;
 

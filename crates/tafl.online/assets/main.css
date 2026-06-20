@@ -76,6 +76,17 @@ a:hover { color: #d4e5f7; }
     font-size: 14px;
 }
 .modal button:hover { background: #73b82a; }
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+.btn-primary {
+    background: #629924; color: #fff; border: none; border-radius: 4px;
+    padding: 8px 16px; cursor: pointer; font-size: 14px; font-weight: 600;
+}
+.btn-primary:hover { background: #73b82a; }
+.btn-secondary {
+    background: #3d3b38; color: #bababa; border: none; border-radius: 4px;
+    padding: 8px 16px; cursor: pointer; font-size: 14px;
+}
+.btn-secondary:hover { background: #4d4b48; }
 
 /* Form fields */
 .field-label { display: block; font-size: 12px; color: #808080; margin: 12px 0 4px; text-transform: uppercase; }
@@ -97,3 +108,29 @@ a:hover { color: #d4e5f7; }
     color: #fff;
     font-size: 14px;
 }
+
+/* Board */
+.game-area { display: flex; gap: 24px; align-items: flex-start; }
+.board { display: flex; flex-direction: column; border: 2px solid #3d3b38; }
+.board-row { display: flex; }
+.cell {
+    width: 48px; height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    background: #2b2a28;
+    border: 1px solid #3d3b38;
+    cursor: pointer;
+    position: relative;
+    font-size: 24px;
+}
+.cell:nth-child(odd) { background: #33322f; }
+.board-row:nth-child(odd) .cell { background: #2b2a28; }
+.board-row:nth-child(odd) .cell:nth-child(odd) { background: #33322f; }
+.cell:hover { background: #3d3b38; }
+.castle-mark { color: #808080; font-size: 12px; position: absolute; }
+.cell.attacker { color: #1a1a2e; }
+.cell.defender { color: #e0e0e0; }
+.cell.king { color: #ffd700; font-size: 28px; }
+.cell.sel { background: #629924 !important; }
+.game-info { color: #808080; font-size: 13px; min-width: 180px; }
+.game-info p { margin-bottom: 6px; }
+.game-info .turn-highlight { color: #fff; font-weight: 600; }
