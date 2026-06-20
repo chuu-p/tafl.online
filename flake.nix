@@ -43,7 +43,20 @@
 
         # For `nix develop`:
         devShell = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [rustc cargo gcc lld pkg-config openssl webkitgtk_4_1 gtk3 xdotool dioxus-cli wasm-bindgen-cli-0-2-125];
+          nativeBuildInputs = with pkgs; [
+            rustc
+            cargo
+            gcc
+            lld
+            pkg-config
+            openssl
+            webkitgtk_4_1
+            gtk3
+            xdotool
+            dioxus-cli
+            diesel-cli
+            wasm-bindgen-cli-0-2-125
+          ];
         };
       }
     );
