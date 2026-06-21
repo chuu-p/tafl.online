@@ -243,19 +243,8 @@ pub async fn me_handler(
     Extension(state): Extension<AuthState>,
     cookies: Cookies,
 ) -> Result<axum::Json<serde_json::Value>, StatusCode> {
-    let session_token = cookies
-        .get("session_token")
-        .map(|c| c.value().to_string())
+    let user_id = get_user_id(&state.session_store, &cookies).await
         .ok_or(StatusCode::UNAUTHORIZED)?;
-
-    let user_id = {
-        let store = state.session_store.read().await;
-        store
-            .sessions
-            .get(&session_token)
-            .map(|s| s.user_id)
-            .ok_or(StatusCode::UNAUTHORIZED)?
-    };
 
     let mut conn = establish_connection_to(&state.db_url);
     let user: User = users::table
@@ -264,6 +253,13 @@ pub async fn me_handler(
         .map_err(|_| StatusCode::UNAUTHORIZED)?;
 
     Ok(axum::Json(serde_json::to_value(user).unwrap()))
+}
+
+/// Get user ID from session cookie. Returns None if not logged in.
+pub async fn get_user_id(session_store: &SharedSession, cookies: &Cookies) -> Option<i32> {
+    let session_token = cookies.get("session_token")?.value().to_string();
+    let store = session_store.read().await;
+    store.sessions.get(&session_token).map(|s| s.user_id)
 }
 
 pub async fn logout_handler(Extension(state): Extension<AuthState>, cookies: Cookies) -> Response {

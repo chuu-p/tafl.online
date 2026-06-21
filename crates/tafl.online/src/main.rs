@@ -320,7 +320,7 @@ fn Game(room_id: String) -> Element {
         spawn(async move {
             #[cfg(target_arch = "wasm32")]
             {
-                if let Some(v) = fetch_json_post(&format!("/api/game/{}/join", rid), json!({"name":"Player"})).await {
+                if let Some(v) = fetch_json_post(&format!("/api/game/{}/join", rid), json!({})).await {
                     if let Some(s) = v.get("side").and_then(|v| v.as_str()) {
                         my_side.set(s.to_string());
                     }

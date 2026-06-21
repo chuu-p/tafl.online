@@ -4,7 +4,46 @@
 
 Real-time 2-player Tablut (a Viking chess variant) on a 9×9 board. Players connect via WebSocket; one plays Swedes (defenders), the other Muscovites (attackers).
 
----
+  123456789
+9 X  AAA  X
+8     A    
+7     D    
+6 A   D   A
+5 AADDKDDAA
+4 A   D   A
+3     D    
+2     A    
+1 X  AAA  X
+
+1,1 corner square (X)
+4,1 attacker
+5,1 attacker
+6,1 attacker
+9,1 corner square (X)
+5,2 attacker
+5,3 defender 
+1,4 attacker
+5,4 defender
+9,4 attacker
+1,5 attacker
+2,5 attacker
+3,5 defender
+4,5 defender
+5,5 king
+6,5 defender
+7,5 defender
+8,5 attacker
+9,5 attacker 
+1,6 attacker
+5,6 defender
+9,6 attacker
+5,7 defender 
+5,8 attacker
+1,9 corner square (X)
+4,9 attacker
+5,9 attacker
+6,9 attacker
+9,9 corner square (X)
 
 ## Data Model
 

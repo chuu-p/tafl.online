@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tower_cookies::Cookies;
 use tafl_domain::board::{Board, Piece, Side, SIZE};
 
 // ---------------------------------------------------------------------------
@@ -18,7 +19,7 @@ use tafl_domain::board::{Board, Piece, Side, SIZE};
 pub struct GameState {
     pub board: [[Piece; SIZE]; SIZE],
     pub turn: Side,
-    pub players: HashMap<Side, String>,
+    pub players: HashMap<Side, i32>,
     pub messages: Vec<GameMessage>,
     pub winner: Option<Side>,
     pub white_time: u32,
@@ -57,7 +58,7 @@ pub struct CreateRequest {
 pub struct Room {
     pub board: Board,
     pub turn: Side,
-    pub players: HashMap<Side, String>,
+    pub players: HashMap<Side, i32>,
     pub messages: Vec<GameMessage>,
     pub winner: Option<Side>,
     pub white_time: u32,
@@ -135,14 +136,25 @@ pub async fn create_handler(
 
 pub async fn join_handler(
     Extension(state): Extension<SharedState>,
+    Extension(auth_state): Extension<crate::auth::AuthState>,
     Path(id): Path<String>,
-    Json(req): Json<JoinRequest>,
+    cookies: Cookies,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
+    let user_id = crate::auth::get_user_id(&auth_state.session_store, &cookies)
+        .await
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+
     let mut state = state.write().await;
     let room = state.get_mut(&id).ok_or(StatusCode::NOT_FOUND)?;
 
     if room.winner.is_some() {
         return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Check if user already in this game
+    if room.players.values().any(|&uid| uid == user_id) {
+        let side = room.players.iter().find(|(_, &uid)| uid == user_id).map(|(s, _)| *s);
+        return Ok(Json(serde_json::json!({ "side": side })));
     }
 
     let side = if !room.players.contains_key(&Side::Swedes) {
@@ -153,8 +165,8 @@ pub async fn join_handler(
         return Err(StatusCode::BAD_REQUEST); // full
     };
 
-    room.players.insert(side, req.name.clone());
-    room.push_msg("join", serde_json::json!({ "side": side, "name": req.name }));
+    room.players.insert(side, user_id);
+    room.push_msg("join", serde_json::json!({ "side": side, "user_id": user_id }));
 
     if room.players.len() == 2 {
         room.push_msg("start", serde_json::json!({ "turn": room.turn }));
@@ -165,14 +177,33 @@ pub async fn join_handler(
 
 pub async fn move_handler(
     Extension(state): Extension<SharedState>,
+    Extension(auth_state): Extension<crate::auth::AuthState>,
     Path(id): Path<String>,
+    cookies: Cookies,
     Json(req): Json<MoveRequest>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let user_id = crate::auth::get_user_id(&auth_state.session_store, &cookies)
+        .await
+        .ok_or((StatusCode::UNAUTHORIZED, "Not logged in".into()))?;
+
     let mut state = state.write().await;
     let room = state.get_mut(&id).ok_or((StatusCode::NOT_FOUND, "Room not found".into()))?;
 
     if room.winner.is_some() {
         return Err((StatusCode::BAD_REQUEST, "Game is over".into()));
+    }
+
+    // Verify the player is on the correct side
+    let player_side = room.players.iter().find(|(_, &uid)| uid == user_id).map(|(s, _)| *s);
+    match player_side {
+        Some(side) => {
+            if side != req.side {
+                return Err((StatusCode::BAD_REQUEST, "Not your side".into()));
+            }
+        }
+        None => {
+            return Err((StatusCode::BAD_REQUEST, "You are not in this game".into()));
+        }
     }
 
     if room.turn != req.side {
