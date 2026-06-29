@@ -1,5 +1,6 @@
 //! This crate contains all shared fullstack server functions.
 use dioxus::prelude::*;
+use dioxus::fullstack::{WebSocketOptions, Websocket};
 
 #[cfg(feature = "server")]
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -21,4 +22,16 @@ pub async fn ping(input: u64) -> Result<String, ServerFnError> {
     );
 
     Ok(diff.as_millis().to_string())
+}
+
+#[get("/api/ping_ws")]
+pub async fn ping_ws(options: WebSocketOptions) -> Result<Websocket<u64, String>> {
+    Ok(options.on_upgrade(move |mut socket| async move {
+        while let Ok(msg) = socket.recv().await {
+            let now = SystemTime::now();
+            let target = UNIX_EPOCH + Duration::from_millis(msg);
+            let diff = target.duration_since(now).unwrap_or_else(|e| e.duration());
+            _ = socket.send(diff.as_millis().to_string()).await;
+        }
+    }))
 }

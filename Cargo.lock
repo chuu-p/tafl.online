@@ -3595,7 +3595,9 @@ dependencies = [
 name = "web"
 version = "0.1.0"
 dependencies = [
+ "api",
  "dioxus",
+ "js-sys",
  "tokio",
  "ui",
  "web-sys",
