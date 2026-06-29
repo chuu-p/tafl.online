@@ -14,9 +14,17 @@ pub fn Echo() -> Element {
             h4 { "ServerFn Echo" }
             input {
                 placeholder: "Type here to echo...",
-                oninput:  move |event| async move {
+                oninput:  move |_event| async move {
+                    #[cfg(feature = "web")]
                     let now = js_sys::Date::now() as u64;
+                    #[cfg(not(feature = "web"))]
+                    let now = 0;
+
+                    #[cfg(feature = "web")]
+                    web_sys::console::log_1(&format!("pinging with now: {}", now).into());
+
                     let data = api::ping(now).await.unwrap();
+
                     response.set(data);
                 },
             }

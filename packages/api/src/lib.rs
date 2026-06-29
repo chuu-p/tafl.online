@@ -14,9 +14,9 @@ pub async fn echo(input: String) -> Result<String, ServerFnError> {
 pub async fn ping(input: u64) -> Result<String, ServerFnError> {
     let now = SystemTime::now();
     let target_time = UNIX_EPOCH + Duration::from_millis(input);
-    let diff = target_time.duration_since(now).unwrap();
+    let diff = target_time.duration_since(now).unwrap_or_else(|e| e.duration());
     println!(
-        "The target timestamp is {} ms in the future.",
+        "The target timestamp is {} ms away.",
         diff.as_millis()
     );
 
