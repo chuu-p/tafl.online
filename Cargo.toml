@@ -4,6 +4,8 @@ members = [
     "packages/ui",
     "packages/web",
     "packages/api",
+    "packages/taste-db",
+    "packages/tafl-game",
 ]
 
 [workspace.dependencies]

@@ -1,0 +1,13 @@
+[package]
+name = "taste-db"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde_json = { version = "1.0", optional = true }
+tafl-game = { path = "../tafl-game", optional = true }
+toasty = { version = "0.7.0", features = ["postgresql", "sqlite"], optional = true }
+tokio = { version = "1.52.3", features = ["full"], optional = true }
+
+[features]
+server = ["dep:tafl-game", "dep:toasty", "dep:tokio", "dep:serde_json"]

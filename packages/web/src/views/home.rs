@@ -1,6 +1,6 @@
+use crate::views::WsPing;
 use dioxus::prelude::*;
 use ui::{Echo, Hero};
-use crate::views::WsPing;
 
 #[component]
 pub fn Home() -> Element {

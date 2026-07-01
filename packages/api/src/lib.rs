@@ -5,6 +5,51 @@ use dioxus::prelude::*;
 #[cfg(feature = "server")]
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+#[cfg(feature = "server")]
+use moka::future::Cache;
+
+#[cfg(feature = "server")]
+use tokio::sync::OnceCell;
+
+#[cfg(feature = "server")]
+static CACHE: OnceCell<Cache<String, tafl_game::Game>> = OnceCell::const_new();
+
+#[cfg(feature = "server")]
+static DB: OnceCell<Db> = OnceCell::const_new();
+
+#[cfg(feature = "server")]
+async fn get_cache() -> &'static Cache<String, tafl_game::Game> {
+    CACHE.get_or_init(|| async {
+        Cache::builder()
+            .max_capacity(10_000)
+            .time_to_live(std::time::Duration::from_secs(300))
+    })
+}
+
+#[cfg(feature = "server")]
+async fn get_db() -> &'static Db {
+    DB.get_or_init(|| async {
+        let _ = dotenvy::dotenv();
+        let _ = dotenvy::from_path(".env");
+        let url = std::env::var("DATABASE_URL").map_err(|_| {
+            std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "DATABASE_URL must be set (e.g. sqlite:tafl.db or postgres://...)",
+            )
+        })?;
+        toasty::Db::builder()
+            .models(toasty::models!(crate::*))
+            .connect(url)
+            .await
+            .unwrap()
+    })
+}
+
+#[get("/api/game/:id")]
+pub async fn echo(input: String) -> Result<String, ServerFnError> {
+    Ok(input)
+}
+
 /// Echo the user input on the server.
 #[post("/api/echo")]
 pub async fn echo(input: String) -> Result<String, ServerFnError> {
@@ -38,3 +83,27 @@ pub async fn ping_ws(options: WebSocketOptions) -> Result<Websocket<u64, String>
         }
     }))
 }
+
+
+#[get("/api/game/{game_id}")]
+async fn get_game(game_id: Uuid) -> Result<taste_db::Game> {
+    let mut db = get_db().await;
+    let mut cache = get_cache().await.clone();
+    
+    if let Some(game) = cache.get(&game_id).await {
+        return game;
+    }
+
+    // cache miss, check db
+    if let Some(game) = taste_db::Game::find()
+        .select(Game::fields().id)
+        .exec(&mut db)
+        .await? {
+            // cache this entry before returning
+            cache.insert(game_id, game).await;
+            return game;
+    }
+
+    None
+}
+

@@ -5,6 +5,11 @@ edition = "2021"
 
 [dependencies]
 dioxus = { workspace = true, features = ["fullstack"] }
+dotenvy = "0.15.7"
+toasty = { version = "0.7.0", features = ["postgresql", "sqlite"] }
+taste-db = { path = "../taste-db", optional = true }
+moka = { version = "0.12.15", features = ["future"] }
+tokio = { version = "1.52.3", features = ["full"] }
 
 [features]
 server = ["dioxus/server"]

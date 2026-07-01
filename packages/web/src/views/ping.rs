@@ -1,6 +1,6 @@
-use dioxus::prelude::*;
-use dioxus::fullstack::{use_websocket, WebSocketOptions};
 use api::ping_ws;
+use dioxus::fullstack::{use_websocket, WebSocketOptions};
+use dioxus::prelude::*;
 
 #[component]
 pub fn WsPing() -> Element {
