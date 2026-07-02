@@ -70,7 +70,50 @@ pub async fn get_game(game_id: u64) -> Result<taste_db::Game, ServerFnError> {
     Ok(game)
 }
 
+#[cfg(feature = "server")]
+#[post("/api/game")]
+pub async fn create_game(
+    variant: Option<String>,
+    attacker_player: Option<String>,
+    defender_player: Option<String>,
+    attacker_elo: Option<u32>,
+    defender_elo: Option<u32>,
+    base_time_seconds: Option<u32>,
+    increment_seconds: Option<u32>,
+    is_private: Option<bool>,
+) -> Result<taste_db::Game, ServerFnError> {
+    let db = get_db().await;
+    let mut db = db.lock().await;
 
+    let game = toasty::create!(taste_db::Game {
+        board: "3aaa3/4a4/4d4/a3d3a/aaddkddaa/a3d3a/4d4/4a4/3aaa3",
+        attacker_player: attacker_player.unwrap_or_default(),
+        defender_player: defender_player.unwrap_or_default(),
+        attacker_elo: attacker_elo.unwrap_or(1500),
+        defender_elo: defender_elo.unwrap_or(1500),
+        current_side: "M",
+        moves: "[]",
+        result: "?",
+        variant: variant.unwrap_or_else(|| "tablut".to_string()),
+        base_time_seconds: base_time_seconds.unwrap_or(600),
+        increment_seconds: increment_seconds.unwrap_or(5),
+        is_private: is_private.unwrap_or(false),
+        status: "active",
+    })
+    .exec(&mut *db)
+    .await
+    .map_err(|e| ServerFnError::ServerError {
+        message: e.to_string(),
+        code: 0,
+        details: None,
+    })?;
+
+    let cache = get_cache().await;
+    cache.insert(game.id, game.clone()).await;
+
+    println!("Created game {} via API", game.id);
+    Ok(game)
+}
 
 /// Echo the user input on the server.
 #[post("/api/echo")]
