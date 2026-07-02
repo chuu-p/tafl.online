@@ -43,12 +43,12 @@ fn WebNavbar() -> Element {
         Navbar {
             Link {
                 to: Route::Home {},
-                "Home"
+                "tafl.online"
             }
-            Link {
-                to: Route::Blog { id: 1 },
-                "Blog"
-            }
+            // Link {
+            //     to: Route::Blog { id: 1 },
+            //     "Blog"
+            // }
         }
 
         Outlet::<Route> {}
