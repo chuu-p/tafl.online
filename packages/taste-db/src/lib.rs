@@ -12,7 +12,7 @@ pub struct User {
     pub rating: u32,
 }
 
-#[derive(Debug, toasty::Model)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, toasty::Model)]
 pub struct Game {
     #[key]
     #[auto]

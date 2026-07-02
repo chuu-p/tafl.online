@@ -5,13 +5,12 @@ edition = "2024"
 
 [dependencies]
 repl-rs = { version = "0.2.11", optional = true }
-serde = { version = "1.0.228", features = ["derive"], optional = true }
-serde_json = { version = "1.0.150", optional = true }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = { version = "1.0.150" }
 
 [features]
 default = ["repl"]
 repl = ["dep:repl-rs"]
-server = ["dep:serde", "dep:serde_json"]
 
 [[bin]]
 name = "repl"
