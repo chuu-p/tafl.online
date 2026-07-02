@@ -1651,6 +1651,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7360491ce676a36bf9bb3c56c1aa791658183a54d2744120f27285738d90465a"
 
 [[package]]
+name = "fast_qr"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f5ea9788036fedaf55f43a2db0ba01eedf47d26fd6852f01e5cf51952571d57"
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4793,9 +4799,14 @@ version = "0.1.0"
 dependencies = [
  "api",
  "dioxus",
+ "fast_qr",
+ "gloo-timers",
  "js-sys",
+ "serde_json",
+ "tafl-game",
  "tokio",
  "ui",
+ "wasm-bindgen-futures",
  "web-sys",
 ]
 

@@ -1,0 +1,11 @@
+[application]
+
+[web.app]
+title = "tafl.online"
+base_path = "/"
+
+[web.resource]
+style = ["assets/main.css", "assets/tailwind.css"]
+
+[web.resource.dev]
+script = []

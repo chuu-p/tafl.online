@@ -10,3 +10,12 @@
 **/target/
 
 **/*.local
+
+# Environment / secrets
+.env
+
+# SQLite database
+*.db
+
+# Dioxus generated assets
+**/assets/tailwind.css

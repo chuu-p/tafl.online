@@ -1,6 +1,47 @@
 body {
-    background-color: #0f1116;
-    color: #ffffff;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 20px;
+    background-color: #222323;
+    color: #f0f6f0;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    padding: 16px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+a {
+    color: #f0f6f0;
+    text-decoration: underline;
+}
+
+a:hover {
+    opacity: 0.8;
+}
+
+button {
+    font-family: 'Courier New', Courier, monospace;
+    border: 1px solid #f0f6f0;
+    background: transparent;
+    color: #f0f6f0;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #f0f6f0;
+    color: #222323;
+}
+
+input, textarea {
+    font-family: 'Courier New', Courier, monospace;
+    background: transparent;
+    border: 1px solid #f0f6f0;
+    color: #f0f6f0;
+    padding: 6px;
+}
+
+::selection {
+    background: #f0f6f0;
+    color: #222323;
 }

@@ -1,8 +1,10 @@
 mod home;
 pub use home::Home;
 
-mod blog;
-pub use blog::Blog;
+mod board_view;
+pub use board_view::{GameView, GameVs};
 
-mod ping;
-pub use ping::WsPing;
+mod board;
+pub use board::Board;
+
+mod icons;

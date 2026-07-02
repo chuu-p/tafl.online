@@ -39,6 +39,15 @@ pub enum ServerMessage {
     Error { message: String },
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GameInfo {
+    pub id: u64,
+    pub board: String,
+    pub current_side: String,
+    pub moves: String,
+    pub result: String,
+}
+
 #[cfg(feature = "server")]
 use moka::future::Cache;
 
@@ -73,6 +82,7 @@ async fn get_db() -> &'static Mutex<Db> {
             .connect(&url)
             .await
             .unwrap();
+        db.push_schema().await.ok();
         Mutex::new(db)
     })
     .await
@@ -113,7 +123,6 @@ pub async fn get_game(game_id: u64) -> Result<taste_db::Game, ServerFnError> {
     Ok(game)
 }
 
-#[cfg(feature = "server")]
 #[post("/api/game")]
 pub async fn create_game(
     variant: Option<String>,
@@ -124,38 +133,51 @@ pub async fn create_game(
     base_time_seconds: Option<u32>,
     increment_seconds: Option<u32>,
     is_private: Option<bool>,
-) -> Result<taste_db::Game, ServerFnError> {
-    let db = get_db().await;
-    let mut db = db.lock().await;
+) -> Result<GameInfo, ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        let db = get_db().await;
+        let mut db = db.lock().await;
 
-    let game = toasty::create!(taste_db::Game {
-        board: "3aaa3/4a4/4d4/a3d3a/aaddkddaa/a3d3a/4d4/4a4/3aaa3",
-        attacker_player: attacker_player.unwrap_or_default(),
-        defender_player: defender_player.unwrap_or_default(),
-        attacker_elo: attacker_elo.unwrap_or(1500),
-        defender_elo: defender_elo.unwrap_or(1500),
-        current_side: "M",
-        moves: "[]",
-        result: "?",
-        variant: variant.unwrap_or_else(|| "tablut".to_string()),
-        base_time_seconds: base_time_seconds.unwrap_or(600),
-        increment_seconds: increment_seconds.unwrap_or(5),
-        is_private: is_private.unwrap_or(false),
-        status: "active",
-    })
-    .exec(&mut *db)
-    .await
-    .map_err(|e| ServerFnError::ServerError {
-        message: e.to_string(),
-        code: 0,
-        details: None,
-    })?;
+        let game = toasty::create!(taste_db::Game {
+            board: "3aaa3/4a4/4d4/a3d3a/aaddkddaa/a3d3a/4d4/4a4/3aaa3",
+            attacker_player: attacker_player.unwrap_or_default(),
+            defender_player: defender_player.unwrap_or_default(),
+            attacker_elo: attacker_elo.unwrap_or(1500),
+            defender_elo: defender_elo.unwrap_or(1500),
+            current_side: "M",
+            moves: "[]",
+            result: "?",
+            variant: variant.unwrap_or_else(|| "tablut".to_string()),
+            base_time_seconds: base_time_seconds.unwrap_or(600),
+            increment_seconds: increment_seconds.unwrap_or(5),
+            is_private: is_private.unwrap_or(false),
+            status: "active",
+        })
+        .exec(&mut *db)
+        .await
+        .map_err(|e| ServerFnError::ServerError {
+            message: e.to_string(),
+            code: 0,
+            details: None,
+        })?;
 
-    let cache = get_cache().await;
-    cache.insert(game.id, game.clone()).await;
+        let cache = get_cache().await;
+        cache.insert(game.id, game.clone()).await;
 
-    println!("Created game {} via API", game.id);
-    Ok(game)
+        println!("Created game {} via API", game.id);
+        Ok(GameInfo {
+            id: game.id,
+            board: game.board,
+            current_side: game.current_side,
+            moves: game.moves,
+            result: game.result,
+        })
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        unreachable!()
+    }
 }
 
 #[get("/api/game/{game_id}/ws")]
@@ -252,15 +274,11 @@ async fn apply_move(game_id: u64, from_sq: u8, to_sq: u8) -> Result<ServerMessag
     let db = get_db().await;
     let mut db = db.lock().await;
 
-    let mut db_game = if let Some(cached) = cache.get(&game_id).await {
-        cached
-    } else {
-        taste_db::Game::get_by_id(&mut *db, &game_id)
-            .await
-            .map_err(|e| ServerFnError::ServerError {
-                message: e.to_string(), code: 0, details: None,
-            })?
-    };
+    let mut db_game = taste_db::Game::get_by_id(&mut *db, &game_id)
+        .await
+        .map_err(|e| ServerFnError::ServerError {
+            message: e.to_string(), code: 0, details: None,
+        })?;
 
     let game: tafl_game::Game = db_game.clone().into();
     let from = tafl_game::Pos::from_index(from_sq).ok_or_else(|| ServerFnError::ServerError {
@@ -330,6 +348,33 @@ pub async fn ping_ws(options: WebSocketOptions) -> Result<Websocket<u64, String>
                 diff.as_micros()
             );
             _ = socket.send(diff.as_millis().to_string()).await;
+        }
+    }))
+}
+
+#[get("/api/ws")]
+pub async fn ws(options: WebSocketOptions) -> Result<Websocket<ClientMessage, ServerMessage>> {
+    Ok(options.on_upgrade(move |socket| async move {
+        use futures::{SinkExt, StreamExt};
+        let (mut sender, mut receiver) = socket.split();
+        loop {
+            match receiver.next().await {
+                Some(Ok(ClientMessage::Ping { client_time_ms })) => {
+                    let server_time_ms = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_millis() as u64;
+                    sender
+                        .send(ServerMessage::Pong {
+                            client_time_ms,
+                            server_time_ms,
+                        })
+                        .await
+                        .ok();
+                }
+                Some(Ok(_)) => {}
+                Some(Err(_)) | None => break,
+            }
         }
     }))
 }
