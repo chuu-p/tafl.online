@@ -10,6 +10,10 @@ toasty = { version = "0.7.0", features = ["postgresql", "sqlite"], optional = tr
 taste-db = { path = "../taste-db", optional = true }
 moka = { version = "0.12.15", features = ["future"], optional = true }
 tokio = { version = "1.52.3", features = ["full"], optional = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+tafl-game = { path = "../tafl-game", optional = true }
+futures = { version = "0.3", optional = true }
 
 [features]
-server = ["dioxus/server", "dep:dotenvy", "dep:toasty", "dep:moka", "dep:tokio", "taste-db/server"]
+server = ["dioxus/server", "dep:dotenvy", "dep:toasty", "dep:moka", "dep:tokio", "taste-db/server", "dep:tafl-game", "dep:futures"]

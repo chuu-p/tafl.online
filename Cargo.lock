@@ -88,7 +88,11 @@ version = "0.1.0"
 dependencies = [
  "dioxus",
  "dotenvy",
+ "futures",
  "moka",
+ "serde",
+ "serde_json",
+ "tafl-game",
  "taste-db",
  "toasty",
  "tokio",
