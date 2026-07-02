@@ -17,6 +17,7 @@ enum Route {
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
+const LOGO: Asset = asset!("/assets/img/tafl.online.logo.on_dark.svg");
 
 fn main() {
     dioxus::launch(App);
@@ -43,7 +44,15 @@ fn WebNavbar() -> Element {
         Navbar {
             Link {
                 to: Route::Home {},
+                img { style: "max-height: 2vh", src: LOGO, id: "tafl.online logo" }
+            }
+            Link {
+                to: Route::Home {},
                 "tafl.online"
+            }
+            Link {
+                to: Route::Home {},
+                "play"
             }
             // Link {
             //     to: Route::Blog { id: 1 },
