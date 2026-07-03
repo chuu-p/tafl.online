@@ -14,6 +14,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 tafl-game = { path = "../tafl-game", optional = true }
 futures = { version = "0.3", optional = true }
+dashmap = { version = "6", optional = true }
 
 [features]
-server = ["dioxus/server", "dep:dotenvy", "dep:toasty", "dep:moka", "dep:tokio", "taste-db/server", "dep:tafl-game", "dep:futures"]
+server = ["dioxus/server", "dep:dotenvy", "dep:toasty", "dep:moka", "dep:tokio", "taste-db/server", "dep:tafl-game", "dep:futures", "dep:dashmap"]

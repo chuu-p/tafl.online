@@ -107,19 +107,19 @@ pub async fn get_db(url: &str) -> Result<Db, toasty::Error> {
 }
 
 // ponytail: TEN board encoding — same format as tafl_game::Game::ten() without trailing metadata
-fn board_to_ten(g: &tafl_game::Game) -> String {
+pub fn board_to_ten(g: &tafl_game::Game) -> String {
     let full = g.ten();
     full.split(' ').next().unwrap_or(&full).to_string()
 }
 
-fn side_to_char(s: tafl_game::Side) -> &'static str {
+pub fn side_to_char(s: tafl_game::Side) -> &'static str {
     match s {
         tafl_game::Side::Attacker => "M",
         tafl_game::Side::Defender => "S",
     }
 }
 
-fn result_to_char(r: tafl_game::Result) -> &'static str {
+pub fn result_to_char(r: tafl_game::Result) -> &'static str {
     match r {
         tafl_game::Result::Pending => "?",
         tafl_game::Result::AttackerWin => "a",
