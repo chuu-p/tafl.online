@@ -39,6 +39,7 @@ fn App() -> Element {
     }
 }
 
+#[allow(unused_mut)]
 #[component]
 fn PingProvider(children: Element) -> Element {
     let mut ping_ms = use_signal(|| 0u64);
@@ -76,6 +77,7 @@ fn PingProvider(children: Element) -> Element {
                 Ok(ServerMessage::Pong {
                     client_time_ms, ..
                 }) => {
+                    let _ = client_time_ms;
                     #[cfg(feature = "web")]
                     {
                         let rtt = js_sys::Date::now() as u64 - client_time_ms;
