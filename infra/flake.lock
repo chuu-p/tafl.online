@@ -403,11 +403,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1783185089,
-        "narHash": "sha256-yd+ekLNsHm/t7LhRSR7Lb21L/7BKikWmvNEaUu/3n94=",
+        "lastModified": 1783185276,
+        "narHash": "sha256-Zp4/Dt+bhk1FxwZO2583XabJF4i2ErFWXRyyuuSWt6c=",
         "owner": "chuu-p",
         "repo": "tafl.online",
-        "rev": "dc5463ab6f4b41ffc56220fc95c90fa28095ffe0",
+        "rev": "2d445b03d8e25c82f513cf0c95b3c496e5f6ded1",
         "type": "github"
       },
       "original": {
