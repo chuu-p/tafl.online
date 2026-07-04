@@ -6,7 +6,6 @@
   src = "${inputs.tafl-online}";
   rust = pkgs.rust-bin.stable.latest.default.override {targets = ["wasm32-unknown-unknown"];};
   dx = pkgs.unstable.dioxus-cli; # ponytail: pkgs is 0.7.6, incompatible with dioxus crate 0.7.9
-  proto = pkgs.protobuf;
   gcc = pkgs.gcc;
   bash = pkgs.bash;
 
@@ -28,7 +27,7 @@ in {
     wantedBy = ["multi-user.target"];
     after = ["network.target"];
     serviceConfig = {
-      ExecStart = "${bash}/bin/bash -c 'set -e; export HOME=/tmp/tafl-online/.home PATH=${rust}/bin:${dx}/bin:${proto}/bin:${wasm-bindgen-cli}/bin:${gcc}/bin:$PATH CARGO_HOME=/tmp/tafl-online/.cargo; rm -rf /tmp/tafl-online; cp -r ${src} /tmp/tafl-online; chmod -R u+w /tmp/tafl-online; cd /tmp/tafl-online/packages/web; ${dx}/bin/dx build --release --package web; rm -rf ${staticDir}; cp -r /tmp/tafl-online/target/dx/release/web/web ${staticDir}; chmod -R u+w ${staticDir}'";
+      ExecStart = "${bash}/bin/bash -c 'set -e; export HOME=/tmp/tafl-online/.home PATH=${rust}/bin:${dx}/bin:${wasm-bindgen-cli}/bin:${gcc}/bin:$PATH CARGO_HOME=/tmp/tafl-online/.cargo; rm -rf /tmp/tafl-online; cp -r ${src} /tmp/tafl-online; chmod -R u+w /tmp/tafl-online; cd /tmp/tafl-online/packages/web; ${dx}/bin/dx build --release --package web; rm -rf ${staticDir}; cp -r /tmp/tafl-online/target/dx/release/web/web ${staticDir}; chmod -R u+w ${staticDir}'";
       Type = "oneshot";
       User = "tafl-web";
     };

@@ -16,7 +16,6 @@
     ./services/grafana.nix
     ./services/maddy.nix
     ./services/tailscale.nix
-    ./services/taste.nix
     ./services/tafl-online.nix
     ./services/nginx.nix
     ./services/pgadmin.nix
