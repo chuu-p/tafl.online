@@ -29,7 +29,7 @@ in {
     wantedBy = ["multi-user.target"];
     after = ["network.target"];
     serviceConfig = {
-      ExecStart = "${bash}/bin/bash -c 'set -e; export HOME=${stateDir}/.home PATH=${rust}/bin:${dx}/bin:${wasm-bindgen-cli}/bin:${binaryen}/bin:${gcc}/bin:$PATH CARGO_HOME=${stateDir}/.cargo CARGO_TARGET_DIR=${stateDir}/target; mkdir -p ${stateDir}/{.cargo,.home,target}; rm -rf /tmp/tafl-online-build; cp -r ${src} /tmp/tafl-online-build; chmod -R u+w /tmp/tafl-online-build; cd /tmp/tafl-online-build/packages/web; ${dx}/bin/dx build --release --package web; rm -rf ${staticDir}; cp -r /tmp/tafl-online-build/target/dx/release/web/web ${staticDir}; chmod -R u+w ${staticDir}'";
+      ExecStart = "${bash}/bin/bash -c 'set -e; export HOME=${stateDir}/.home PATH=${rust}/bin:${dx}/bin:${wasm-bindgen-cli}/bin:${binaryen}/bin:${gcc}/bin:$PATH CARGO_HOME=${stateDir}/.cargo CARGO_TARGET_DIR=${stateDir}/target; mkdir -p ${stateDir}/{.cargo,.home,target}; rm -rf /tmp/tafl-online-build; cp -r ${src} /tmp/tafl-online-build; chmod -R u+w /tmp/tafl-online-build; cd /tmp/tafl-online-build/packages/web; ${dx}/bin/dx build --release --package web; rm -rf ${staticDir}; cp -r ${stateDir}/target/dx/release/web/web ${staticDir}; chmod -R u+w ${staticDir}'";
       Type = "oneshot";
       User = "tafl-web";
       StateDirectory = "tafl-online";
