@@ -5,8 +5,8 @@
 }: {
   sops.secrets."postgres-top-password" = {
     owner = "postgres";
-    group = "postgres";
-    mode = "0400";
+    group = "tafl-web";
+    mode = "0440";
   };
 
   services.postgresql = {
