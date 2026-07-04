@@ -92,6 +92,8 @@
   nix.settings = {
     trusted-users = ["root" "@wheel" "chuu"];
     experimental-features = ["nix-command" "flakes"];
+    extra-substituters = ["https://chuu-p.cachix.org"];
+    extra-trusted-public-keys = ["chuu-p.cachix.org-1:Na+1OK6RudvKJ8DAuENsp0q+W8luF9Eb/uq3Q1AByHQ="];
   };
 
   nixpkgs.config.allowUnfree = true;
