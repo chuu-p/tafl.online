@@ -23,13 +23,44 @@
   };
   staticDir = "/var/lib/tafl-online/static";
   stateDir = "/var/lib/tafl-online";
+
+  buildScript = pkgs.writeShellScript "tafl-online-build" ''
+    set -e
+    export HOME=${stateDir}/.home
+    export PATH=${rust}/bin:${dx}/bin:${wasm-bindgen-cli}/bin:${binaryen}/bin:${gcc}/bin:$PATH
+    export CARGO_HOME=${stateDir}/.cargo
+    export CARGO_TARGET_DIR=${stateDir}/target
+
+    mkdir -p ${stateDir}/.cargo ${stateDir}/.home ${stateDir}/target
+
+    rm -rf /tmp/tafl-online-build
+    cp -r ${src} /tmp/tafl-online-build
+    chmod -R u+w /tmp/tafl-online-build
+
+    cd /tmp/tafl-online-build/packages/web
+    ${dx}/bin/dx build --release --package web
+
+    rm -rf ${staticDir}
+    cp -r ${stateDir}/target/dx/web/release/web ${staticDir}
+    chmod -R u+w ${staticDir}
+
+    # ponytail: dx hashes asset filenames but HTML references unhashed names.
+    # Create symlinks so nginx can serve them.
+    cd ${staticDir}/public/assets
+    for f in *-dxh*; do
+      base=$(echo "$f" | sed 's/-dxh[0-9a-f]*//')
+      if [ "$f" != "$base" ] && [ ! -e "$base" ]; then
+        ln -s "$f" "$base"
+      fi
+    done
+  '';
 in {
   systemd.services.tafl-online = {
     description = "tafl.online frontend build";
     wantedBy = ["multi-user.target"];
     after = ["network.target"];
     serviceConfig = {
-      ExecStart = "${bash}/bin/bash -c 'set -e; export HOME=${stateDir}/.home PATH=${rust}/bin:${dx}/bin:${wasm-bindgen-cli}/bin:${binaryen}/bin:${gcc}/bin:$PATH CARGO_HOME=${stateDir}/.cargo CARGO_TARGET_DIR=${stateDir}/target; mkdir -p ${stateDir}/.cargo ${stateDir}/.home ${stateDir}/target; rm -rf /tmp/tafl-online-build; cp -r ${src} /tmp/tafl-online-build; chmod -R u+w /tmp/tafl-online-build; cd /tmp/tafl-online-build/packages/web; ${dx}/bin/dx build --release --package web; rm -rf ${staticDir}; cp -r ${stateDir}/target/dx/web/release/web ${staticDir}; chmod -R u+w ${staticDir}; cd ${staticDir}/public/assets; for f in *-dxh*; do base=$(echo "$f" | sed "s/-dxh[0-9a-f]*//"); [ "$f" != "$base" ] && [ ! -e "$base" ] && ln -s "$f" "$base"; done'";
+      ExecStart = "${buildScript}";
       Type = "oneshot";
       User = "tafl-web";
       StateDirectory = "tafl-online";
