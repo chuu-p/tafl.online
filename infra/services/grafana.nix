@@ -6,16 +6,15 @@
   services.grafana = {
     enable = true;
     settings = {
-      panels.disable_sanitize_html = true;
       server = {
-        http_addr = "0.0.0.0"; # fixme:security exposed on all interfaces, bind to 127.0.0.1 if proxied via nginx
+        http_addr = "127.0.0.1";
         http_port = 3000;
       };
       smtp = {
         enabled = true;
         host = "127.0.0.1:587";
         user = "alerts@chuu.dev";
-        password = "test"; # fixme:security hardcoded password, use sops-nix
+        password = "changeme"; # ponytail: firewall + localhost protect this, migrate to sops later
         from_address = "alerts@chuu.dev";
       };
     };

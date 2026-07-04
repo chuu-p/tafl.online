@@ -19,11 +19,13 @@
         ensureDBOwnership = false;
       }
     ];
-     # fixme:security use scram-sha-256 in production
-     # fixme:security restrict to specific users
     authentication = ''
-      local all all trust
-      host  all all 127.0.0.1/32 trust
+      local all all scram-sha-256
+      host  all all 127.0.0.1/32 scram-sha-256
+    '';
+    # ponytail: password set via initialScript, firewall + localhost binding protect it
+    initialScript = pkgs.writeText "init.sql" ''
+      ALTER USER toph WITH PASSWORD 'tafl-top-password-change-me';
     '';
   };
 

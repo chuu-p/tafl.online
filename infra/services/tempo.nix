@@ -16,11 +16,11 @@
       };
       distributor.receivers = {
         otlp.protocols = {
-          http.endpoint = "0.0.0.0:4318";
-          grpc.endpoint = "0.0.0.0:4317";
+          http.endpoint = "127.0.0.1:4318";
+          grpc.endpoint = "127.0.0.1:4317";
         };
-          zipkin.endpoint = "0.0.0.0:9411";
-          jaeger.protocols.thrift_http.endpoint = "0.0.0.0:14268";
+          zipkin.endpoint = "127.0.0.1:9411";
+          jaeger.protocols.thrift_http.endpoint = "127.0.0.1:14268";
       };
     };
   };

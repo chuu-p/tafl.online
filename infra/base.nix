@@ -13,7 +13,8 @@
   # Shared boot setup
   documentation.man.generateCaches = false;
 
-  networking.firewall.enable = false;
+  networking.firewall.enable = true;
+  networking.firewall.allowedTCPPorts = [22];
 
   # boot.supportedFilesystems = ["nfs"];
 
@@ -64,7 +65,7 @@
   # Shared user
   users.users.chuu = {
     isNormalUser = true;
-    password = "chuu";
+    hashedPassword = "!"; # ponytail: no password login, SSH keys only
     extraGroups = ["networkmanager" "wheel" "docker"];
     shell = pkgs.fish;
     openssh.authorizedKeys.keys = [
@@ -82,7 +83,7 @@
       commands = [
         {
           command = "ALL";
-          options = ["NOPASSWD"];
+          options = [];
         }
       ];
     }

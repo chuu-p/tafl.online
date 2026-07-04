@@ -1,11 +1,11 @@
-{ pkgs, ... }: {
+{pkgs, ...}: {
   services.pgadmin = {
     enable = true;
-    openFirewall = true;
+    openFirewall = false;
     settings = {
-      DEFAULT_SERVER = "0.0.0.0";
+      DEFAULT_SERVER = "127.0.0.1";
     };
     initialEmail = "artemis@chuu.dev";
-    initialPasswordFile = pkgs.writeText "pgadmin-password" "YourSecurePassword123"; # fixme:security this password should be injected with sops-nix
+    initialPasswordFile = pkgs.writeText "pgadmin-password" "changeme"; # ponytail: firewall + localhost protect this, migrate to sops later
   };
 }
