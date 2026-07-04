@@ -43,7 +43,10 @@
     wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = "${pkgs.bash}/bin/bash -c '${config.services.postgresql.package}/bin/psql -U postgres -c \"ALTER USER toph WITH PASSWORD \\\"$(cat ${config.sops.secrets."postgres-top-password".path})\\\"\"'";
+      ExecStart = "${pkgs.writeShellScript "set-pg-password" ''
+        PW=$(cat ${config.sops.secrets."postgres-top-password".path})
+        echo "ALTER USER toph WITH PASSWORD '$PW';" | ${config.services.postgresql.package}/bin/psql -U postgres
+      ''}";
       User = "postgres";
     };
   };
