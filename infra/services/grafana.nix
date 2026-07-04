@@ -3,6 +3,12 @@
   pkgs,
   ...
 }: {
+  sops.secrets."grafana-smtp-password" = {
+    owner = "grafana";
+    group = "grafana";
+    mode = "0400";
+  };
+
   services.grafana = {
     enable = true;
     settings = {
@@ -14,7 +20,7 @@
         enabled = true;
         host = "127.0.0.1:587";
         user = "alerts@chuu.dev";
-        password = "changeme"; # ponytail: firewall + localhost protect this, migrate to sops later
+        password = "$__file{${config.sops.secrets."grafana-smtp-password".path}}";
         from_address = "alerts@chuu.dev";
       };
     };

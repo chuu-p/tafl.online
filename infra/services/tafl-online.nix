@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   inputs,
   ...
@@ -72,11 +73,10 @@ in {
     after = ["network.target" "tafl-online-build.service" "postgresql.service"];
     requires = ["postgresql.service"];
     serviceConfig = {
-      ExecStart = "${staticDir}/server";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'export DATABASE_URL=\"postgres:///toph?host=/run/postgresql&user=toph&password=$(cat ${config.sops.secrets."postgres-top-password".path})\"; exec ${staticDir}/server'";
       Type = "simple";
       User = "tafl-web";
       StateDirectory = "tafl-online";
-      Environment = "DATABASE_URL=postgres:///toph?host=/run/postgresql&user=toph&password=tafl-top-password-change-me"; # ponytail: matches postgresql initialScript password
       Restart = "on-failure";
       RestartSec = 5;
     };
