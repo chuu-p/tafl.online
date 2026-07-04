@@ -13,7 +13,7 @@
   services.cloudflared = {
     enable = true;
     tunnels = {
-      "tafl-tunnel" = {
+      "94125df0-b4d2-49bc-b0d3-f804465edce7" = {
         credentialsFile = config.sops.secrets."cloudflared-creds".path;
         ingress = {
           "tafl.online" = "http://localhost:80";
