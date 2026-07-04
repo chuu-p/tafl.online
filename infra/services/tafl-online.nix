@@ -21,15 +21,17 @@
     doCheck = false;
   };
   staticDir = "/var/lib/tafl-online/static";
+  stateDir = "/var/lib/tafl-online";
 in {
   systemd.services.tafl-online = {
     description = "tafl.online frontend build";
     wantedBy = ["multi-user.target"];
     after = ["network.target"];
     serviceConfig = {
-      ExecStart = "${bash}/bin/bash -c 'set -e; export HOME=/tmp/tafl-online/.home PATH=${rust}/bin:${dx}/bin:${wasm-bindgen-cli}/bin:${gcc}/bin:$PATH CARGO_HOME=/tmp/tafl-online/.cargo; rm -rf /tmp/tafl-online; cp -r ${src} /tmp/tafl-online; chmod -R u+w /tmp/tafl-online; cd /tmp/tafl-online/packages/web; ${dx}/bin/dx build --release --package web; rm -rf ${staticDir}; cp -r /tmp/tafl-online/target/dx/release/web/web ${staticDir}; chmod -R u+w ${staticDir}'";
+      ExecStart = "${bash}/bin/bash -c 'set -e; export HOME=${stateDir}/.home PATH=${rust}/bin:${dx}/bin:${wasm-bindgen-cli}/bin:${gcc}/bin:$PATH CARGO_HOME=${stateDir}/.cargo CARGO_TARGET_DIR=${stateDir}/target; mkdir -p ${stateDir}/{.cargo,.home,target}; rm -rf /tmp/tafl-online-build; cp -r ${src} /tmp/tafl-online-build; chmod -R u+w /tmp/tafl-online-build; cd /tmp/tafl-online-build/packages/web; ${dx}/bin/dx build --release --package web; rm -rf ${staticDir}; cp -r /tmp/tafl-online-build/target/dx/release/web/web ${staticDir}; chmod -R u+w ${staticDir}'";
       Type = "oneshot";
       User = "tafl-web";
+      StateDirectory = "tafl-online";
     };
   };
 
