@@ -4,18 +4,26 @@
   lib,
   ...
 }: let
-  domain = "tafl.chuu.dev";
+  domain = "tafl.online";
 in {
+  security.acme.acceptTerms = true;
+  security.acme.defaults.email = "artemis@chuu.dev";
+
   services.nginx = {
     enable = true;
     recommendedProxySettings = true;
     virtualHosts."${domain}" = {
-      enableACME = lib.mkForce false; # fixme:security TLS disabled, enable ACME for production
-      forceSSL = false; # fixme:security HTTP only, enable for production
+      enableACME = true;
+      forceSSL = true;
       locations."/" = {
         proxyPass = "http://127.0.0.1:8080";
         proxyWebsockets = true;
       };
+    };
+    virtualHosts."www.${domain}" = {
+      enableACME = true;
+      forceSSL = true;
+      globalRedirect = domain;
     };
   };
   networking.firewall.allowedTCPPorts = [80 443];
