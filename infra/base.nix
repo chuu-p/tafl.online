@@ -83,7 +83,7 @@
       commands = [
         {
           command = "ALL";
-          options = [];
+          options = ["NOPASSWD"]; # ponytail: needed for deploy-rs remote activation
         }
       ];
     }
