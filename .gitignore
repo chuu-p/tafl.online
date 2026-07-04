@@ -19,3 +19,8 @@
 
 # Dioxus generated assets
 **/assets/tailwind.css
+
+# Ponytail plugin (cloned, not tracked)
+.opencode/plugins/ponytail/
+
+opencode.json
