@@ -78,6 +78,27 @@ pub static PENDING_DB_WRITES: std::sync::atomic::AtomicUsize =
     std::sync::atomic::AtomicUsize::new(0);
 
 #[cfg(feature = "server")]
+fn init_tracing() {
+    use opentelemetry::global;
+    use opentelemetry_otlp::WithExportConfig;
+    use tracing_subscriber::EnvFilter;
+
+    let tracer = opentelemetry_otlp::new_pipeline()
+        .with_endpoint("http://127.0.0.1:4317")
+        .with_protocol(opentelemetry_otlp::Protocol::Grpc)
+        .install_batch(opentelemetry::runtime::TokioCurrentThread)
+        .unwrap();
+
+    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+    tracing_subscriber::registry()
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with(telemetry)
+        .init();
+
+    global::set_tracer_provider(opentelemetry_sdk::trace::TracerProvider::default());
+}
+
+#[cfg(feature = "server")]
 pub async fn wait_for_pending_writes() {
     use std::sync::atomic::Ordering;
     while PENDING_DB_WRITES.load(Ordering::SeqCst) > 0 {
@@ -86,8 +107,10 @@ pub async fn wait_for_pending_writes() {
 }
 
 #[cfg(feature = "server")]
+#[tracing::instrument]
 async fn get_db() -> &'static Mutex<Db> {
     DB.get_or_init(|| async {
+        init_tracing();
         let _ = dotenvy::dotenv();
         let _ = dotenvy::from_path(".env");
         let url = std::env::var("DATABASE_URL")
@@ -135,6 +158,7 @@ fn game_to_state_msg(game_id: u64, g: &tafl_game::Game) -> ServerMessage {
 }
 
 #[cfg(feature = "server")]
+#[tracing::instrument(skip_all, fields(game_id))]
 #[get("/api/game/{game_id}")]
 pub async fn get_game(game_id: u64) -> Result<taste_db::Game, ServerFnError> {
     let active = get_active_games().await;
@@ -315,6 +339,7 @@ async fn load_game_state_msg(game_id: u64) -> Result<Option<ServerMessage>, Serv
 }
 
 #[cfg(feature = "server")]
+#[tracing::instrument(skip_all, fields(game_id, from_sq, to_sq))]
 async fn apply_move(game_id: u64, from_sq: u8, to_sq: u8) -> Result<ServerMessage, ServerFnError> {
     let active = get_active_games().await;
     let cache = get_cache().await;

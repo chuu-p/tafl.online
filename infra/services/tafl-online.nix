@@ -73,7 +73,7 @@ in {
     after = ["network.target" "tafl-online-build.service" "postgresql.service"];
     requires = ["postgresql.service"];
     serviceConfig = {
-      ExecStart = "${pkgs.bash}/bin/bash -c 'export DATABASE_URL=\"postgres:///toph?host=/run/postgresql&user=toph&password=$(cat ${config.sops.secrets."postgres-top-password".path})\"; exec ${staticDir}/server'";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'export RUST_LOG=\"info\" DATABASE_URL=\"postgres:///toph?host=/run/postgresql&user=toph&password=$(cat ${config.sops.secrets."postgres-top-password".path})\"; exec ${staticDir}/server'";
       Type = "simple";
       User = "tafl-web";
       StateDirectory = "tafl-online";
