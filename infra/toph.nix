@@ -18,6 +18,7 @@
     ./services/tailscale.nix
     ./services/tafl-online.nix
     ./services/nginx.nix
+    ./services/cloudflared.nix
     ./services/pgadmin.nix
   ];
 
