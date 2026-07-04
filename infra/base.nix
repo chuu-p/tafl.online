@@ -14,7 +14,7 @@
   documentation.man.generateCaches = false;
 
   networking.firewall.enable = true;
-  networking.firewall.allowedTCPPorts = [22];
+  networking.firewall.allowedTCPPorts = [22 3000]; # ponytail: 3000 for Grafana via Tailscale
 
   # boot.supportedFilesystems = ["nfs"];
 
