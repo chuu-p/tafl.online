@@ -1,0 +1,53 @@
+{
+  pkgs,
+  inputs,
+  ...
+}: let
+  src = "${inputs.tafl-online}";
+  rust = pkgs.rust-bin.stable.latest.default.override {targets = ["wasm32-unknown-unknown"];};
+  dx = pkgs.unstable.dioxus-cli; # ponytail: pkgs is 0.7.6, incompatible with dioxus crate 0.7.9
+  proto = pkgs.protobuf;
+  gcc = pkgs.gcc;
+  bash = pkgs.bash;
+
+  # ponytail: nixpkgs ships 0.2.108, dx serve needs 0.2.126.
+  wasm-bindgen-cli = pkgs.rustPlatform.buildRustPackage rec {
+    pname = "wasm-bindgen-cli";
+    version = "0.2.126";
+    src = pkgs.fetchCrate {
+      inherit pname version;
+      hash = "sha256-H6Is3fiZVxZCfOMWK5dWMSrtn50VGv0sfdnsT+cTtyk=";
+    };
+    cargoHash = "sha256-VucqkXbCi4qtQzY/HrXiDnbSURsagPsdNVMn1Tw3UiY=";
+    doCheck = false;
+  };
+  staticDir = "/var/lib/tafl-online/static";
+in {
+  systemd.services.tafl-online = {
+    description = "tafl.online frontend build";
+    wantedBy = ["multi-user.target"];
+    after = ["network.target"];
+    serviceConfig = {
+      ExecStart = "${bash}/bin/bash -c 'set -e; export HOME=/tmp/tafl-online/.home PATH=${rust}/bin:${dx}/bin:${proto}/bin:${wasm-bindgen-cli}/bin:${gcc}/bin:$PATH CARGO_HOME=/tmp/tafl-online/.cargo; rm -rf /tmp/tafl-online; cp -r ${src} /tmp/tafl-online; chmod -R u+w /tmp/tafl-online; cd /tmp/tafl-online/packages/web; ${dx}/bin/dx build --release --package web; rm -rf ${staticDir}; cp -r /tmp/tafl-online/target/dx/release/web/web ${staticDir}; chmod -R u+w ${staticDir}'";
+      Type = "oneshot";
+      User = "tafl-web";
+    };
+  };
+
+  systemd.services.tafl-online-nginx-reload = {
+    description = "Reload nginx after tafl-online build";
+    after = ["tafl-online.service"];
+    requires = ["tafl-online.service"];
+    serviceConfig = {
+      ExecStart = "${pkgs.systemd}/bin/systemctl reload nginx";
+      Type = "oneshot";
+    };
+  };
+
+  users.users.tafl-web = {
+    isSystemUser = true;
+    group = "tafl-web";
+    createHome = true;
+  };
+  users.groups.tafl-web = {};
+}
