@@ -78,24 +78,40 @@ pub static PENDING_DB_WRITES: std::sync::atomic::AtomicUsize =
     std::sync::atomic::AtomicUsize::new(0);
 
 #[cfg(feature = "server")]
-fn init_tracing() {
-    use opentelemetry::global;
-    use opentelemetry_otlp::WithExportConfig;
-    use tracing_subscriber::EnvFilter;
+static TRACING_INITED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-    let tracer = opentelemetry_otlp::new_pipeline()
+#[cfg(feature = "server")]
+fn init_tracing() {
+    if TRACING_INITED.swap(true, std::sync::atomic::Ordering::SeqCst) {
+        return;
+    }
+
+    use opentelemetry::global;
+    use opentelemetry::trace::TracerProvider as _;
+    use opentelemetry_otlp::WithExportConfig;
+    use opentelemetry_sdk::trace::TracerProvider;
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::util::SubscriberInitExt;
+
+    let exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_tonic()
         .with_endpoint("http://127.0.0.1:4317")
-        .with_protocol(opentelemetry_otlp::Protocol::Grpc)
-        .install_batch(opentelemetry::runtime::TokioCurrentThread)
+        .build()
         .unwrap();
 
-    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
-    tracing_subscriber::registry()
-        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
-        .with(telemetry)
-        .init();
+    let provider = TracerProvider::builder()
+        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::TokioCurrentThread)
+        .build();
 
-    global::set_tracer_provider(opentelemetry_sdk::trace::TracerProvider::default());
+    let tracer = provider.tracer("tafl-online");
+    global::set_tracer_provider(provider);
+
+    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+    let _ = tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")))
+        .with(telemetry)
+        .try_init();
 }
 
 #[cfg(feature = "server")]
