@@ -13,8 +13,8 @@ in {
       enableACME = lib.mkForce false; # fixme:security TLS disabled, enable ACME for production
       forceSSL = false; # fixme:security HTTP only, enable for production
       locations."/" = {
-        root = "/var/lib/tafl-online/static/public";
-        tryFiles = "$uri $uri/ /index.html";
+        proxyPass = "http://127.0.0.1:8080";
+        proxyWebsockets = true;
       };
     };
   };

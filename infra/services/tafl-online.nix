@@ -45,7 +45,6 @@
     chmod -R u+w ${staticDir}
 
     # ponytail: dx hashes asset filenames but HTML references unhashed names.
-    # Create symlinks so nginx can serve them.
     cd ${staticDir}/public/assets
     for f in *-dxh*; do
       base=$(echo "$f" | sed 's/-dxh[0-9a-f]*//')
@@ -55,7 +54,7 @@
     done
   '';
 in {
-  systemd.services.tafl-online = {
+  systemd.services.tafl-online-build = {
     description = "tafl.online frontend build";
     wantedBy = ["multi-user.target"];
     after = ["network.target"];
@@ -67,10 +66,26 @@ in {
     };
   };
 
+  systemd.services.tafl-online = {
+    description = "tafl.online fullstack server";
+    wantedBy = ["multi-user.target"];
+    after = ["network.target" "tafl-online-build.service" "postgresql.service"];
+    requires = ["postgresql.service"];
+    serviceConfig = {
+      ExecStart = "${staticDir}/server";
+      Type = "simple";
+      User = "tafl-web";
+      StateDirectory = "tafl-online";
+      Environment = "DATABASE_URL=postgres:///toph?host=/run/postgresql&user=toph";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+  };
+
   systemd.services.tafl-online-nginx-reload = {
     description = "Reload nginx after tafl-online build";
-    after = ["tafl-online.service"];
-    requires = ["tafl-online.service"];
+    after = ["tafl-online-build.service"];
+    requires = ["tafl-online-build.service"];
     serviceConfig = {
       ExecStart = "${pkgs.systemd}/bin/systemctl reload nginx";
       Type = "oneshot";
