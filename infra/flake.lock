@@ -403,19 +403,14 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1783185493,
-        "narHash": "sha256-1r53Vga2XMo1hHujFY/qO9b9yezaN46s1vWsyF/pm4U=",
-        "owner": "chuu-p",
-        "repo": "tafl.online",
-        "rev": "c68ebc4679e9a393cfff6b70429ad33328c0534e",
-        "type": "github"
+        "path": "..",
+        "type": "path"
       },
       "original": {
-        "owner": "chuu-p",
-        "ref": "opentafl",
-        "repo": "tafl.online",
-        "type": "github"
-      }
+        "path": "..",
+        "type": "path"
+      },
+      "parent": []
     },
     "utils": {
       "inputs": {
