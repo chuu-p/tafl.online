@@ -12,6 +12,7 @@
   services.grafana = {
     enable = true;
     settings = {
+      panels.disable_sanitize_html = true; # ponytail: user needs this for custom dashboard panels
       server = {
         http_addr = "0.0.0.0"; # ponytail: firewall restricts to trusted networks
         http_port = 3000;
