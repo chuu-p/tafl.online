@@ -8,7 +8,7 @@
     wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "simple";
-      ExecStart = "${pkgs.tailscale}/bin/tailscale funnel --bg=false 443 localhost:80";
+      ExecStart = "${pkgs.tailscale}/bin/tailscale funnel --bg=false 80";
       ExecStop = "${pkgs.tailscale}/bin/tailscale funnel reset";
       Restart = "on-failure";
       RestartSec = "10s";
