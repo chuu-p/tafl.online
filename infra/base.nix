@@ -2,10 +2,12 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }: {
   imports = [
     ./nix.nix
+    inputs.sops-nix.nixosModules.sops
   ];
 
   # Shared boot setup
